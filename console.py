@@ -61,17 +61,17 @@ def main():
     
     # 验证文件路径（如果提供了的话）
     if args.file:
-        if os.path.exists(args.file):
-            print(f"✓ 文件 '{args.file}' 存在")
-        else:
+        if not os.path.exists(args.file):
             print(f"✗ 文件 '{args.file}' 不存在")
             sys.exit(1)
     
     # 验证下载路径（如果提供了的话）
     if args.download:
-        download_dir = os.path.dirname(args.download)
-        if download_dir and not os.path.exists(download_dir):
-            print(f"✗ 下载目录 '{download_dir}' 不存在")
+        if not os.path.isdir(args.download):
+            print(f"✗ 下载目录 '{args.download}' 不是目录")
+            sys.exit(1)
+        if not os.path.exists(args.download):
+            print(f"✗ 下载目录 '{args.download}' 不存在")
             sys.exit(1)
 
 
