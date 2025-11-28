@@ -3,6 +3,7 @@ import time
 import asyncio
 import argparse
 import os
+import sys
 from playwright.async_api import async_playwright
 
 CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
@@ -35,7 +36,7 @@ async def new_notebook(driver, file_path='/Users/mhlee/Work/ke/notebooklm/data/K
     await driver.wait_for_selector('button[aria-label="Upload sources from your computer"]', state='visible')
 
     await asyncio.sleep(2)
-    
+
     # 悬停到按钮上
     await driver.hover('button[aria-label="Upload sources from your computer"]')
 
@@ -113,9 +114,25 @@ async def connect_and_open(file_path='/Users/mhlee/Work/ke/notebooklm/data/KeMem
         while True:
             await asyncio.sleep(1)
 
+def print_example():
+    print("")
+    print("example:")
+    print("python nblm.py --file_path /Users/mhlee/Work/dev/notebooklm/data/panda.txt --convert_file_type 'Audio Overview' --download_path /Users/mhlee/Work/dev/notebooklm/downloads")
+    print("python nblm.py --file_path /Users/mhlee/Work/ke/notebooklm/data/panda.txt --convert_file_type 'Audio Overview' --download_path /Users/mhlee/Work/dev/notebooklm/downloads")
+    print("python nblm.py --file_path /Users/mhlee/Work/dev/notebooklm/data/KeMemDesign.pdf --convert_file_type 'Video Overview' --download_path /Users/mhlee/Work/dev/notebooklm/downloads")
+    print("python nblm.py --file_path /Users/mhlee/Work/ke/notebooklm/data/KeMemDesign.pdf --convert_file_type 'Video Overview' --download_path /Users/mhlee/Work/dev/notebooklm/downloads")
+    print("")
+
 def main():
     # 创建参数解析器
     parser = argparse.ArgumentParser(description='NotebookLM 自动化脚本')
+    
+    #打印参数个数
+    # print(f"参数个数: {len(sys.argv)}")
+    if len(sys.argv) == 1:
+        print_example()
+        sys.exit(1)
+
     parser.add_argument('--file_path', type=str, required=True, help='要上传的文件路径')
     parser.add_argument('--convert_file_type', type=str, required=True, help='转换类型（如：视频概览）')
     parser.add_argument('--download_path', type=str, required=True, help='下载文件保存路径')
