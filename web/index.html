@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Notebook 代理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .file-input-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .file-button:hover {
+            background: #45a049;
+        }
+
+        .file-list {
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .file-item {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-name {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .remove-file {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .path-display {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-item {
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Google Notebook 代理</h1>
+
+        <form id="notebookForm">
+            <div class="form-group">
+                <label for="fileInput">选择文件</label>
+                <div class="file-input-container">
+                    <input type="file" id="fileInput" class="file-input" multiple>
+                    <button type="button" class="file-button" onclick="document.getElementById('fileInput').click()">
+                        选择文件
+                    </button>
+                </div>
+                <div id="fileList" class="file-list" style="display: none;"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="downloadPath">选择下载路径</label>
+                <input type="file" id="downloadPathInput" class="file-input" webkitdirectory>
+                <button type="button" class="file-button" onclick="document.getElementById('downloadPathInput').click()">
+                    选择下载路径
+                </button>
+                <div id="pathDisplay" class="path-display" style="display: none;"></div>
+            </div>
+
+            <div class="form-group">
+                <label>生成文件格式</label>
+                <div class="checkbox-grid">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="audio" name="formats" value="Audio">
+                        <label for="audio">Audio</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="video" name="formats" value="Video">
+                        <label for="video">Video</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="mindmap" name="formats" value="MindMap">
+                        <label for="mindmap">MindMap</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="reports" name="formats" value="Reports">
+                        <label for="reports">Reports</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="flashcards" name="formats" value="Flashcards">
+                        <label for="flashcards">Flashcards</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="quiz" name="formats" value="Quiz">
+                        <label for="quiz">Quiz</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="infographic" name="formats" value="Infographic">
+                        <label for="infographic">Infographic</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="slidedeck" name="formats" value="SlideDeck">
+                        <label for="slidedeck">SlideDeck</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">提交</button>
+        </form>
+
+        <div id="resultSection" class="result-section">
+            <div id="loadingMessage" class="loading">生成中 ...</div>
+            <div id="results" style="display: none;">
+                <div class="result-item">
+                    <span class="result-label">上传文件：</span>
+                    <span id="uploadedFiles"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">生成格式：</span>
+                    <span id="selectedFormats"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">下载路径：</span>
+                    <span id="downloadPathResult"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+        let selectedPath = '';
+
+        // 文件选择处理
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            selectedFiles = selectedFiles.concat(files);
+            updateFileList();
+        });
+
+        // 移除文件
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        // 更新文件列表显示
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            const fileListDiv = fileList;
+
+            if (selectedFiles.length > 0) {
+                fileList.style.display = 'block';
+                fileListDiv.innerHTML = selectedFiles.map((file, index) =>
+                    `<div class="file-item">
+                        <span class="file-name">${file.name}</span>
+                        <button type="button" class="remove-file" onclick="removeFile(${index})">×</button>
+                    </div>`
+                ).join('');
+            } else {
+                fileList.style.display = 'none';
+            }
+        }
+
+        // 下载路径选择处理
+        document.getElementById('downloadPathInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                selectedPath = e.target.files[0].webkitRelativePath.split('/')[0];
+                updatePathDisplay();
+            }
+        });
+
+        // 更新路径显示
+        function updatePathDisplay() {
+            const pathDisplay = document.getElementById('pathDisplay');
+            if (selectedPath) {
+                pathDisplay.style.display = 'block';
+                pathDisplay.textContent = selectedPath;
+            } else {
+                pathDisplay.style.display = 'none';
+            }
+        }
+
+        // 表单提交处理
+        document.getElementById('notebookForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 获取选中的格式
+            const selectedFormats = Array.from(document.querySelectorAll('input[name="formats"]:checked'))
+                .map(checkbox => checkbox.value);
+
+            // 显示结果区域
+            const resultSection = document.getElementById('resultSection');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const results = document.getElementById('results');
+
+            resultSection.classList.add('show');
+            loadingMessage.style.display = 'block';
+            results.style.display = 'none';
+
+            // 模拟处理时间（实际应用中这里会发送到服务器）
+            setTimeout(() => {
+                loadingMessage.style.display = 'none';
+                results.style.display = 'block';
+
+                // 显示上传的文件名
+                document.getElementById('uploadedFiles').textContent =
+                    selectedFiles.length > 0 ?
+                    selectedFiles.map(file => file.name).join(', ') :
+                    '无文件';
+
+                // 显示选中的格式
+                document.getElementById('selectedFormats').textContent =
+                    selectedFormats.length > 0 ?
+                    selectedFormats.join(', ') :
+                    '未选择格式';
+
+                // 显示下载路径
+                document.getElementById('downloadPathResult').textContent =
+                    selectedPath || '未选择路径';
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
