@@ -21,7 +21,7 @@ def start_chrome():
     print(f"Chrome 已启动，端口：{PORT}")
 
 
-async def new_notebook(driver, file_path='/Users/mhlee/Work/ke/notebooklm/data/middle.txt', convert_file_type = 'Audio Overview'):
+async def new_notebook(driver, file_path='/Users/mhlee/Work/ke/notebooklm/data/KeMemDesign.pdf', convert_file_type = 'Audio Overview'):
 
     await driver.get_by_role("button", name="Create new notebook").nth(0).click()
 
