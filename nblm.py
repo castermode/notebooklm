@@ -21,7 +21,7 @@ def start_chrome():
     print(f"Chrome 已启动，端口：{PORT}")
 
 
-async def new_notebook(driver, file_path='/Users/mhlee/Work/ke/notebooklm/data/KeMemDesign.pdf', convert_file_type = 'Audio Overview'):
+async def new_notebook(driver, file_path='/Users/mhlee/Work/ke/notebooklm/data/KeMemDesign.pdf', convert_file_type = 'Video Overview', download_path = '/Users/mhlee/Work/ke/notebooklm/downloads/'):
 
     await driver.get_by_role("button", name="Create new notebook").nth(0).click()
 
@@ -56,15 +56,15 @@ async def new_notebook(driver, file_path='/Users/mhlee/Work/ke/notebooklm/data/K
         print("按钮在超时时间内一直是禁用状态")
     print("等待更多按钮出现...")
 
-    for i in range(30):  # 最多检查 10 次
+    for i in range(500):  # 最多检查 10 次
         if await driver.locator('button[aria-label="More"].artifact-more-button').count() > 0:
 
             await driver.locator('button[aria-label="More"].artifact-more-button').nth(0).click()
             print("已点击更多按钮")
             break
         else:
-            print(f"第 {i + 1} 次检查：按钮未出现，等待 30 秒")
-            await asyncio.sleep(30)
+            print(f"第 {i + 1} 次检查：按钮未出现，等待 10 秒")
+            await asyncio.sleep(10)
 
     # more_button = driver.get_by_role("button", name="更多")
     # more_button.wait_for(state="visible", timeout=1200000)  # 最长等 10 分钟
