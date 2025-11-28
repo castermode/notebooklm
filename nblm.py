@@ -1,6 +1,8 @@
 import subprocess
 import time
 import asyncio
+import argparse
+import os
 from playwright.async_api import async_playwright
 
 CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
@@ -29,7 +31,7 @@ async def new_notebook(driver, file_path='/Users/mhlee/Work/ke/notebooklm/data/K
     # driver.get_by_role("button", name="选择文件").click()
     await asyncio.sleep(3)
 
-     # 等待按钮出现并可见
+    # 等待按钮出现并可见
     await driver.wait_for_selector('button[aria-label="Upload sources from your computer"]', state='visible')
 
     # 悬停到按钮上
@@ -74,7 +76,7 @@ async def new_notebook(driver, file_path='/Users/mhlee/Work/ke/notebooklm/data/K
     await driver.get_by_role("menuitem", name="Download").click()
 
 
-async def connect_and_open():
+async def connect_and_open(file_path='/Users/mhlee/Work/ke/notebooklm/data/KeMemDesign.pdf', convert_file_type='Audio Overview', download_path='/Users/mhlee/Work/ke/notebooklm/downloads/'):
     async with async_playwright() as pw:
         browser = await pw.chromium.connect_over_cdp(f"http://localhost:{PORT}")
 
@@ -88,28 +90,42 @@ async def connect_and_open():
 
         # ⭐ 监听下载事件并手动保存文件
         async def on_download(download):
-            save_path = "/Users/mhlee/Work/ke/notebooklm/downloads/" + download.suggested_filename
+            import os
+            save_path = os.path.join(download_path, download.suggested_filename)
             print(f"保存文件 -> {save_path}")
             await download.save_as(save_path)
-            browser.close()
+            print("下载完成，关闭浏览器")
+            await browser.close()
 
         page.on("download", on_download)
 
         # await page.goto("https://notebooklm.google.com/?icid=home_maincta&_gl=1*1rzjuad*_ga*ODYxMjgzODE0LjE3NjQyNDMyNjI.*_ga_W0LDH41ZCB*czE3NjQyNDMyNjEkbzEkZzAkdDE3NjQyNDMyNjEkajYwJGwwJGgw&original_referer=https:%2F%2Fnotebooklm.google%23&pli=1")
         await page.goto("https://notebooklm.google.com/", wait_until="domcontentloaded")
 
-        await new_notebook(page)
+        await new_notebook(page, file_path, convert_file_type)
 
         print("任务完成")
 
 
-        # #保持运行
-        # while True:
-        #     await asyncio.sleep(1)
+        #保持运行
+        while True:
+            await asyncio.sleep(1)
 
 def main():
+    # 创建参数解析器
+    parser = argparse.ArgumentParser(description='NotebookLM 自动化脚本')
+    parser.add_argument('--file_path', type=str, required=True, help='要上传的文件路径')
+    parser.add_argument('--convert_file_type', type=str, required=True, help='转换类型（如：视频概览）')
+    parser.add_argument('--download_path', type=str, required=True, help='下载文件保存路径')
+
+    args = parser.parse_args()
+
+    print(f"文件路径: {args.file_path}")
+    print(f"转换类型: {args.convert_file_type}")
+    print(f"下载路径: {args.download_path}")
+
     start_chrome()
-    asyncio.run(connect_and_open())
+    asyncio.run(connect_and_open(args.file_path, args.convert_file_type, args.download_path))
 
 if __name__ == "__main__":
     main()
