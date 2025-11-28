@@ -34,6 +34,8 @@ async def new_notebook(driver, file_path='/Users/mhlee/Work/ke/notebooklm/data/K
     # 等待按钮出现并可见
     await driver.wait_for_selector('button[aria-label="Upload sources from your computer"]', state='visible')
 
+    await asyncio.sleep(2)
+    
     # 悬停到按钮上
     await driver.hover('button[aria-label="Upload sources from your computer"]')
 
