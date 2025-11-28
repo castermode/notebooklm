@@ -29,6 +29,12 @@ async def new_notebook(driver, file_path='/Users/mhlee/Work/ke/notebooklm/data/K
     # driver.get_by_role("button", name="选择文件").click()
     await asyncio.sleep(3)
 
+     # 等待按钮出现并可见
+    await driver.wait_for_selector('button[aria-label="Upload sources from your computer"]', state='visible')
+
+    # 悬停到按钮上
+    await driver.hover('button[aria-label="Upload sources from your computer"]')
+
     await driver.locator('input[name="Filedata"]').set_input_files(file_path, timeout=0)
 
     await asyncio.sleep(2)
@@ -85,6 +91,7 @@ async def connect_and_open():
             save_path = "/Users/mhlee/Work/ke/notebooklm/downloads/" + download.suggested_filename
             print(f"保存文件 -> {save_path}")
             await download.save_as(save_path)
+            browser.close()
 
         page.on("download", on_download)
 
@@ -93,9 +100,12 @@ async def connect_and_open():
 
         await new_notebook(page)
 
-        #保持运行
-        while True:
-            await asyncio.sleep(1)
+        print("任务完成")
+
+
+        # #保持运行
+        # while True:
+        #     await asyncio.sleep(1)
 
 def main():
     start_chrome()
